@@ -104,6 +104,8 @@ void PlatformDeinit(void)
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
     nrf5LogDeinit();
+    nrf5GpioteInit();
+    nrf5GpioInit();
 #endif
 }
 
@@ -122,6 +124,7 @@ void PlatformProcessDrivers(otInstance *aInstance)
 #ifndef SPIS_TRANSPORT_DISABLE
     nrf5SpiSlaveProcess();
 #endif
+    nrf5GpioProcess(aInstance);
 }
 
 __WEAK void PlatformEventSignalPending(void)

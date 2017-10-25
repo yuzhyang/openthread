@@ -91,6 +91,8 @@ PLATFORM_COMMON_SOURCES                                                         
     spi-slave.c                                                                                              \
     uart.c                                                                                                   \
     usb-cdc-uart.c                                                                                           \
+    gpiote.c                                                                                                 \
+    gpio.c                                                                                                   \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
