@@ -93,6 +93,8 @@ PLATFORM_COMMON_SOURCES                                                         
     system.c                                                                                                 \
     uart.c                                                                                                   \
     usb-cdc-uart.c                                                                                           \
+    gpiote.c                                                                                                 \
+    gpio.c                                                                                                   \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
