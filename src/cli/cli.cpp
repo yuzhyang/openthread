@@ -216,8 +216,9 @@ const struct Command Interpreter::sCommands[] = {
     {"state", &Interpreter::ProcessState},
     {"thread", &Interpreter::ProcessThread},
 #ifndef OTDLL
-    {"txpower", &Interpreter::ProcessTxPower},
-    {"udp", &Interpreter::ProcessUdp},
+    { "txpower", &Interpreter::ProcessTxPower },
+    { "udp", &Interpreter::ProcessUdp },
+    { "latency", &Interpreter::ProcessLatency},
 #endif
     {"version", &Interpreter::ProcessVersion},
 };
@@ -276,6 +277,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mResolvingInProgress(0)
 #endif
     , mUdp(*this)
+    mCliLatency(*this),
 #endif
     , mInstance(aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -2713,6 +2715,22 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 }
+
+#ifndef OTDLL
+void Interpreter::ProcessUdp(int argc, char *argv[])
+{
+    otError error;
+    error = mUdp.Process(argc, argv);
+    AppendResult(error);
+}
+
+void Interpreter::ProcessLatency(int argc, char *argv[])
+{
+    otError error;
+    error = mCliLatency.Process(argc, argv);
+    AppendResult(error);
+}
+#endif
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
