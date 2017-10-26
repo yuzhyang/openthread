@@ -149,6 +149,7 @@ SOURCES_COMMON =                      \
     cli_dataset.cpp                   \
     cli_uart.cpp                      \
     cli_udp_example.cpp               \
+    cli_latency.cpp                   \
     $(NULL)
 
 libopenthread_cli_ftd_a_SOURCES =     \
@@ -169,6 +170,7 @@ noinst_HEADERS                      = \
     cli_uart.hpp                      \
     cli_udp_example.hpp               \
     x509_cert_key.hpp                 \
+    cli_latency.hpp                   \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

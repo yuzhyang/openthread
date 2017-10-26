@@ -44,6 +44,7 @@
 
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
+#include "cli/cli_latency.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_header.hpp>
@@ -101,6 +102,7 @@ class Interpreter
     friend class Coap;
     friend class CoapsSecure;
     friend class UdpExample;
+    friend class CliLatency;
 
 public:
     /**
@@ -317,6 +319,7 @@ private:
 #ifndef OTDLL
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
+    void ProcessLatency(int argc, char *argv[]);
 #endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -435,6 +438,7 @@ private:
 #endif
 
     UdpExample mUdp;
+    CliLatency mCliLatency;
 
 #endif
 
