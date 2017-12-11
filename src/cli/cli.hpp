@@ -46,6 +46,7 @@
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
 #include "cli/cli_latency.hpp"
+#include "cli/cli_throughput.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_header.hpp>
@@ -98,6 +99,7 @@ class Interpreter
     friend class Coap;
     friend class UdpExample;
     friend class CliLatency;
+    friend class CliThroughput;
 
 public:
     /**
@@ -176,6 +178,9 @@ public:
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
 
     CliLatency GetCliLatency() {return mCliLatency; };
+    CliThroughput GetCliThroughput() {return mCliThroughput; };
+
+    static uint8_t sTestChoice;
 
 private:
     enum
@@ -311,6 +316,7 @@ private:
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
     void ProcessLatency(int argc, char *argv[]);
+    void ProcessThroughput(int argc, char *argv[]);
 #endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -428,6 +434,7 @@ private:
 
     UdpExample mUdp;
     CliLatency mCliLatency;
+    CliThroughput mCliThroughput;
 
 #endif
 

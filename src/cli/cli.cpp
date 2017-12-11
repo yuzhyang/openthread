@@ -41,6 +41,10 @@
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
+#include <openthread/platform/gpio.h>
+#include <openthread/platform/random.h>
+
+#include <openthread/openthread.h>
 #include <openthread/commissioner.h>
 #include <openthread/icmp6.h>
 #include <openthread/joiner.h>
@@ -89,6 +93,8 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 
 namespace Cli {
+
+uint8_t Interpreter::sTestChoice = 0;
 
 const struct Command Interpreter::sCommands[] = {
     {"help", &Interpreter::ProcessHelp},
@@ -219,6 +225,7 @@ const struct Command Interpreter::sCommands[] = {
     { "txpower", &Interpreter::ProcessTxPower },
     { "udp", &Interpreter::ProcessUdp },
     { "latency", &Interpreter::ProcessLatency},
+    { "throughput", &Interpreter::ProcessThroughput},
 #endif
     {"version", &Interpreter::ProcessVersion},
 };
@@ -234,6 +241,20 @@ void otFreeMemory(const void *)
     // No-op on systems running OpenThread in-proc
 }
 #endif
+
+extern "C" void otPlatGpioSignalEvent(uint32_t aPinIndex)
+{
+    (void)aPinIndex;
+    if (Interpreter::sTestChoice == 1)
+    {
+        Uart::sUartServer->GetInterpreter().GetCliThroughput().platGpioResponse();
+    }
+    else if (Interpreter::sTestChoice == 0)
+    {
+        Uart::sUartServer->GetInterpreter().GetCliLatency().platGpioResponse();
+    }
+
+}
 
 template <class T> class otPtr
 {
@@ -278,6 +299,7 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
     , mUdp(*this)
     mCliLatency(*this),
+    mCliThroughput(*this),
 #endif
     , mInstance(aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -2727,7 +2749,16 @@ void Interpreter::ProcessUdp(int argc, char *argv[])
 void Interpreter::ProcessLatency(int argc, char *argv[])
 {
     otError error;
+    Interpreter::sTestChoice = 0;
     error = mCliLatency.Process(argc, argv);
+    AppendResult(error);
+}
+
+void Interpreter::ProcessThroughput(int argc, char *argv[])
+{
+    otError error;
+    Interpreter::sTestChoice = 1;
+    error = mCliThroughput.Process(argc, argv);
     AppendResult(error);
 }
 #endif
