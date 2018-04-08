@@ -311,8 +311,8 @@ Interpreter::Interpreter(Instance *aInstance)
     , mResolvingInProgress(0)
 #endif
     , mUdp(*this)
-    mCliLatency(*this),
-    mCliThroughput(*this),
+    , mCliLatency(*this)
+    , mCliThroughput(*this)
 #endif
     , mInstance(aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
