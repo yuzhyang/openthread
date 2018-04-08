@@ -188,7 +188,9 @@ void otPlatGpioToggle(uint32_t aPin)
 void otPlatGpioEnableInterrupt(uint32_t aPin)
 {
     // init gpiote for event/interrupt
-    nrf_drv_common_irq_enable(GPIOTE_IRQn, 7);//GPIOTE_CONFIG_IRQ_PRIORITY);
+    // nrf_drv_common_irq_enable(GPIOTE_IRQn, 7);//GPIOTE_CONFIG_IRQ_PRIORITY);
+    NRFX_IRQ_PRIORITY_SET(GPIOTE_IRQn, 7);
+    NRFX_IRQ_ENABLE(GPIOTE_IRQn);
     nrf_gpiote_event_clear(NRF_GPIOTE_EVENTS_PORT);
     nrf_gpiote_int_enable(GPIOTE_INTENSET_PORT_Msk);
 
@@ -206,7 +208,7 @@ void otPlatGpioEnableInterrupt(uint32_t aPin)
 
 void otPlatGpioDisableInterrupt(uint32_t aPin)
 {
-    nrf_drv_common_irq_disable(GPIOTE_IRQn);
+    NRFX_IRQ_DISABLE(GPIOTE_IRQn);
     nrf_gpiote_event_clear(NRF_GPIOTE_EVENTS_PORT);
     nrf_gpiote_int_disable(GPIOTE_INTENSET_PORT_Msk);
 
