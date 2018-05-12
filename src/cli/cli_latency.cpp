@@ -102,9 +102,7 @@ void CliLatency::Init(void)
     mAcceptTimestamp = 0;
     mIsRun = true;
 
-    otPlatGpioCfgOutput(MONITOR_PIN + 1);
-    otPlatGpioWrite(MONITOR_PIN + 1, 1);
-
+    otPlatGpioWrite(MONITOR_PIN, 0);
     otPlatGpioEnableInterrupt(MONITOR_PIN);
 
     for (int i = 0; i < 1000; i++)
@@ -363,7 +361,10 @@ void CliLatency::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
     //Get sequence number from the packet
     count = GetAcceptedCount(aMessage);
 
-    mReceiveTimer[count] = timestamp;
+    if (mReceiveTimer[count] == 0)
+        mReceiveTimer[count] = timestamp;
+    ot::Cli::CliLatency::sCount = count + 1;
+
     mInterpreter.mServer->OutputFormat("hoplimit %d, amuount %d, %u, %d, %d, %u, %u from ", aMessageInfo->mHopLimit, mInitialCount, timestamp, count, otMessageGetLength(aMessage) - otMessageGetOffset(aMessage), mTimeElapse, mJitter);
     mInterpreter.mServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x %d \r\n",
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
@@ -386,7 +387,7 @@ otError CliLatency::ProcessResult(int argc, char *argv[])
     {
         if (sSendTimestamp[i] == 0)
             break;
-        mInterpreter.mServer->OutputFormat("%d, %d \r\n", ot::Cli::CliLatency::sSendTimestamp[i], mReceiveTimer[i]);
+        mInterpreter.mServer->OutputFormat("%d, %d, %d \r\n", ot::Cli::CliLatency::sSendTimestamp[i], mReceiveTimer[i], i);
     }
 
     return OT_ERROR_NONE;
@@ -397,8 +398,6 @@ otError CliLatency::ProcessGpio(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
-
-    otPlatGpioToggle(MONITOR_PIN+1);
 
     return OT_ERROR_NONE;
 
@@ -547,6 +546,9 @@ exit:
 
 void CliLatency::platGpioResponse(void)
 {
+    // if (TimerMilli::GetNow() == ot::Cli::CliLatency::sSendTimestamp[ot::Cli::CliLatency::sCount] - 1)
+    //    return
+
     ot::Cli::CliLatency::sSendTimestamp[ot::Cli::CliLatency::sCount] = TimerMilli::GetNow();
     ot::Cli::CliLatency::sCount++;
 }
