@@ -36,6 +36,7 @@
 // #include <openthread/config.h>
 #include <openthread/message.h>
 #include <openthread/udp.h>
+#include <openthread/network_time.h>
 
 #include "cli/cli.hpp"
 #include "cli_uart.hpp"
@@ -95,7 +96,7 @@ void CliLatency::Init(void)
 {
     ot::Cli::CliLatency::sCount = 0;
     mLossNum = 0;
-    mLatency = 0;
+    //mLatency = 0;
     mTimestamp = 0;
     mTimeElapse = 0;
     mJitter = 0;
@@ -116,22 +117,17 @@ void CliLatency::Init(void)
 otError CliLatency::SendUdpPacket(void)
 {
     otError error;
-    uint32_t timestamp = 0;
+    uint64_t timestamp = 0;
     otMessage *message;
 
-    timestamp = TimerMilli::GetNow();
     memset(mPayload, 0, sizeof(mPayload));
-    
-    mPayload[0] = timestamp >> 24;
-    mPayload[1] = timestamp >> 16;
-    mPayload[2] = timestamp >> 8;
-    mPayload[3] = timestamp;
-    mPayload[4] = ot::Cli::CliLatency::sCount >> 24;
-    mPayload[5] = ot::Cli::CliLatency::sCount >> 16;
-    mPayload[6] = ot::Cli::CliLatency::sCount >> 8;
-    mPayload[7] = ot::Cli::CliLatency::sCount;
 
-    for (uint16_t i = 8; i < mLength; i++)
+    mPayload[8] = ot::Cli::CliLatency::sCount >> 24;
+    mPayload[9] = ot::Cli::CliLatency::sCount >> 16;
+    mPayload[10] = ot::Cli::CliLatency::sCount >> 8;
+    mPayload[11] = ot::Cli::CliLatency::sCount;
+
+    for (uint16_t i = 12; i < mLength; i++)
     {
         mPayload[i] = 'T';
     }
@@ -139,6 +135,11 @@ otError CliLatency::SendUdpPacket(void)
     message = otUdpNewMessage(mInterpreter.mInstance, true);
 
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
+    otNetworkTimeGet(mInterpreter.mInstance, timestamp);
+    memcpy(mPayload, &timestamp, sizeof(timestamp));
+    mInterpreter.mServer->OutputFormat("%d,%d,%d,%d,%d,%d,%d,%d\r\n", mPayload[0], mPayload[1], \
+        mPayload[2], mPayload[3], mPayload[4], mPayload[5], mPayload[6], mPayload[7]);
 
     error = otMessageAppend(message, mPayload, static_cast<uint16_t>(mLength));
 
@@ -183,7 +184,7 @@ uint32_t CliLatency::GetAcceptedCount(otMessage *aMessage)
 
     length = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
-    count = buf[4] << 24 | buf[5] << 16 | buf[6] << 8 | buf[7];
+    count = buf[8] << 24 | buf[9] << 16 | buf[10] << 8 | buf[11];
     return count;
 }
 
@@ -347,13 +348,23 @@ void CliLatency::HandleUdpReceive(void *aContext, otMessage *aMessage, const otM
 
 void CliLatency::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
+    uint8_t buf[1500];
+    int length;
     otMessageInfo messageInfo;
     otMessage *message;
     uint32_t timestamp = 0;
+    uint64_t receiveTimestamp = 0;
+    uint64_t sendTimestamp = 0;
 
     uint16_t count;
 
     timestamp = TimerMilli::GetNow();
+    otNetworkTimeGet(mInterpreter.mInstance, receiveTimestamp);
+
+    length      = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
+    buf[length] = '\0';
+
+    memcpy(&sendTimestamp, buf, sizeof(sendTimestamp));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     memset(&message, 0, sizeof(message));
@@ -363,9 +374,12 @@ void CliLatency::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
 
     if (mReceiveTimer[count] == 0)
         mReceiveTimer[count] = timestamp;
+ 
+    mLatency[count] = receiveTimestamp - sendTimestamp;
     ot::Cli::CliLatency::sCount = count + 1;
 
-    mInterpreter.mServer->OutputFormat("hoplimit %d, amuount %d, %u, %d, %d, %u, %u from ", aMessageInfo->mHopLimit, mInitialCount, timestamp, count, otMessageGetLength(aMessage) - otMessageGetOffset(aMessage), mTimeElapse, mJitter);
+    mInterpreter.mServer->OutputFormat("hoplimit %d, amuount %d, %u, %d, %d, %u, %u from ", aMessageInfo->mHopLimit, \
+        mInitialCount, timestamp, count, otMessageGetLength(aMessage) - otMessageGetOffset(aMessage), mTimeElapse, mJitter);
     mInterpreter.mServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x %d \r\n",
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]),
@@ -376,6 +390,10 @@ void CliLatency::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]),
                                        aMessageInfo->mPeerPort);
+
+    mInterpreter.mServer->OutputFormat("----------%d\r\n", mLatency[count-1]);
+    mInterpreter.mServer->OutputFormat("+++++++++++%d\r\n", receiveTimestamp);
+    mInterpreter.mServer->OutputFormat("@@@@@@@@@@@%d\r\n", sendTimestamp);
 }
 
 otError CliLatency::ProcessResult(int argc, char *argv[])
@@ -387,7 +405,8 @@ otError CliLatency::ProcessResult(int argc, char *argv[])
     {
         if (sSendTimestamp[i] == 0)
             break;
-        mInterpreter.mServer->OutputFormat("%d, %d, %d \r\n", ot::Cli::CliLatency::sSendTimestamp[i], mReceiveTimer[i], i);
+        mInterpreter.mServer->OutputFormat("%d, %d, %d, %d, %d \r\n", ot::Cli::CliLatency::sSendTimestamp[i], \
+            mReceiveTimer[i], i, mReceiveTimer[i]-sSendTimestamp[i], mLatency[i]);
     }
 
     return OT_ERROR_NONE;

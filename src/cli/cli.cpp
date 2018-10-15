@@ -45,7 +45,6 @@
 #include <openthread/platform/gpio.h>
 #include <openthread/platform/random.h>
 
-#include <openthread/openthread.h>
 #include <openthread/commissioner.h>
 #include <openthread/icmp6.h>
 #include <openthread/joiner.h>

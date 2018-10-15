@@ -35,7 +35,6 @@
 #define CLI_LATENCY_HPP_
 // #include "cli.hpp"
 #include <openthread/udp.h>
-#include <openthread/types.h>
 
 #include <openthread/platform/gpio.h>
 #include <openthread/platform/random.h>
@@ -131,7 +130,7 @@ private:
     uint32_t mTimestamp;
     uint32_t mTimeElapse;
     uint32_t mLossNum;
-    uint32_t mLatency;
+    uint32_t mLatency[100];
     uint32_t mJitter;
     uint32_t mAcceptTimestamp;
     uint32_t mInitialCount;
@@ -139,7 +138,6 @@ private:
     uint32_t mSendTimer[100];
     uint32_t mReceiveTimer[1000];
     uint32_t mAmount;
-
 };
 
 }  // namespace Cli

@@ -42,7 +42,6 @@
 #include <inttypes.h>
 
 #include <common/logging.hpp>
-#include <openthread/types.h>
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/gpio.h>
 #include <openthread/platform/alarm-micro.h>

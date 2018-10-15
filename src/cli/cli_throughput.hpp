@@ -35,7 +35,6 @@
 #define CLI_THROUGHPUT_HPP_
 // #include "cli.hpp"
 #include <openthread/udp.h>
-#include <openthread/types.h>
 
 #include <openthread/platform/gpio.h>
 #include <openthread/platform/random.h>

@@ -36,6 +36,8 @@
 #define OPENTHREAD_NETWORK_TIME_H_
 
 #include <openthread/error.h>
+#include <openthread/ip6.h>
+#include <openthread/message.h>
 
 #ifdef __cplusplus
 extern "C" {
