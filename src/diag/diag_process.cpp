@@ -45,8 +45,11 @@ namespace ot {
 namespace Diagnostics {
 
 const struct Diag::Command Diag::sCommands[] = {
-    {"start", &ProcessStart}, {"stop", &ProcessStop},     {"channel", &ProcessChannel}, {"power", &ProcessPower},
-    {"send", &ProcessSend},   {"repeat", &ProcessRepeat}, {"stats", &ProcessStats},     {NULL, NULL},
+    {"start", &ProcessStart},     {"stop", &ProcessStop},
+    {"channel", &ProcessChannel}, {"power", &ProcessPower},
+    {"send", &ProcessSend},       {"repeat", &ProcessRepeat},
+    {"stats", &ProcessStats},     {"receive", &ProcessReceive},
+    {"sleep", &ProcessSleep},     {NULL, NULL},
 };
 
 struct Diag::DiagStats Diag::sStats;
@@ -302,6 +305,54 @@ void Diag::ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t
              "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
              static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
              static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi));
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+}
+
+void Diag::ProcessReceive(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
+
+    if (aArgCount != 0)
+    {
+        long value;
+
+        SuccessOrExit(error = ParseLong(aArgVector[0], value));
+        VerifyOrExit(value >= OT_RADIO_CHANNEL_MIN && value <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
+
+        sChannel = static_cast<uint8_t>(value);
+    }
+    error = otPlatRadioReceive(sInstance, sChannel);
+    otPlatDiagChannelSet(sChannel);
+
+    snprintf(aOutput, aOutputMaxLen, "set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", sChannel,
+             error);
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+}
+
+void Diag::ProcessSleep(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aArgCount);
+    OT_UNUSED_VARIABLE(aArgVector);
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
+
+    if (otPlatRadioIsEnabled(sInstance))
+    {
+        snprintf(aOutput, aOutputMaxLen, "radio is not enable now\r\n");
+    }
+    else
+    {
+        error = otPlatRadioSleep(sInstance);
+    }
+    snprintf(aOutput, aOutputMaxLen, "set radio from receive to sleep \r\nstatus 0x%02x\r\n", error);
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);

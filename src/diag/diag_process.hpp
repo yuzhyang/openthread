@@ -78,6 +78,8 @@ private:
     static void ProcessSend(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessReceive(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessSleep(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     static void TxPacket(void);

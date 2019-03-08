@@ -111,9 +111,19 @@ Enter radio sleep mode.
 
 ```bash
 > diag sleep
-sleeping now...
+set radio from receive to sleep
+status 0x00
 ```
 
+### diag receive
+
+Set radio from sleep mode to receive mode.
+
+```bash
+> diag receive
+set radio from sleep to receive on channel 11
+status 0x00
+```
 ### diag stats
 
 Print statistics during diagnostics mode.
